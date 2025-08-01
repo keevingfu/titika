@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titika AI Content Structure Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border-radius: 20px;
+            border: 1px solid #333;
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #e4007c 0%, #ff4081 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .dashboard-header p {
+            font-size: 1.2em;
+            color: #888;
+        }
+        
+        .key-insights {
+            background: linear-gradient(135deg, #ff1744 0%, #d50000 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .key-insights h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .key-insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .insight-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .insight-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .insight-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #333;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(228, 0, 124, 0.2);
+        }
+        
+        .card h3 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: #e4007c;
+        }
+        
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .chart-container-large {
+            height: 500px;
+        }
+        
+        .chart-container-xlarge {
+            height: 600px;
+        }
+        
+        .recommendation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .recommendation-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 4px solid #e4007c;
+            transition: all 0.3s ease;
+        }
+        
+        .recommendation-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 20px rgba(228, 0, 124, 0.3);
+        }
+        
+        .recommendation-card h4 {
+            color: #e4007c;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .recommendation-card p {
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        
+        .priority-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .priority-critical {
+            background: #ff1744;
+            color: white;
+        }
+        
+        .priority-high {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .priority-medium {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .metrics-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        
+        .metrics-table th,
+        .metrics-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        
+        .metrics-table th {
+            background: #2a2a2a;
+            color: #e4007c;
+            font-weight: bold;
+        }
+        
+        .metrics-table tr:hover {
+            background: #252525;
+        }
+        
+        .language-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 5px;
+            background: #333;
+            color: #fff;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e4007c 0%, #ff4081 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #333;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-header h1 {
+                font-size: 1.8em;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .recommendation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Titika AI Content Structure Analysis Dashboard</h1>
+        <p>Multi-Language Content Optimization for Enhanced AI Visibility</p>
+    </div>
+    
+    <div class="key-insights">
+        <h2>Critical Content Structure Insights</h2>
+        <div class="key-insights-grid">
+            <div class="insight-item">
+                <div class="insight-value">7</div>
+                <div class="insight-label">Languages Analyzed</div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-value">7</div>
+                <div class="insight-label">Content Formats</div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-value">85%</div>
+                <div class="insight-label">Structured Content Gap</div>
+            </div>
+            <div class="insight-item">
+                <div class="insight-value">4x</div>
+                <div class="insight-label">Improvement Potential</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content Structure Heatmap -->
+    <div class="card full-width">
+        <h3>Content Structure Usage Across Languages</h3>
+        <div id="contentHeatmap" class="chart-container chart-container-xlarge"></div>
+        <div class="recommendation-card">
+            <h4>Key Finding</h4>
+            <p>Bullet lists and rankings are universally preferred by AI across all languages. Japanese and Korean show lower explicit bullet usage but maintain structured organization through numbered sentences.</p>
+            <span class="priority-badge priority-critical">Action: Prioritize bullet-point content creation</span>
+        </div>
+    </div>
+    
+    <div class="dashboard-grid">
+        <!-- Content Format Effectiveness -->
+        <div class="card">
+            <h3>Content Format Effectiveness Score</h3>
+            <div id="formatEffectiveness" class="chart-container"></div>
+        </div>
+        
+        <!-- Language Coverage Analysis -->
+        <div class="card">
+            <h3>Titika's Language Coverage Gap</h3>
+            <div id="languageCoverage" class="chart-container"></div>
+        </div>
+        
+        <!-- Content Origin Distribution -->
+        <div class="card">
+            <h3>AI Content Source Distribution</h3>
+            <div id="contentOrigin" class="chart-container"></div>
+        </div>
+        
+        <!-- Competitive Format Usage -->
+        <div class="card">
+            <h3>Competitor Content Format Analysis</h3>
+            <div id="competitorFormats" class="chart-container"></div>
+        </div>
+    </div>
+    
+    <!-- Strategic Priority Matrix -->
+    <div class="card full-width">
+        <h3>Content Optimization Priority Matrix</h3>
+        <div id="priorityMatrix" class="chart-container chart-container-large"></div>
+    </div>
+    
+    <!-- Implementation Roadmap -->
+    <div class="card full-width">
+        <h3>Content Structure Implementation Roadmap</h3>
+        <div id="implementationTimeline" class="chart-container"></div>
+        <table class="metrics-table">
+            <thead>
+                <tr>
+                    <th>Phase</th>
+                    <th>Content Format</th>
+                    <th>Languages</th>
+                    <th>Expected Impact</th>
+                    <th>Timeline</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Phase 1</strong></td>
+                    <td>FAQ/Q&A Pages</td>
+                    <td>
+                        <span class="language-tag">EN</span>
+                        <span class="language-tag">FR</span>
+                        <span class="language-tag">DE</span>
+                    </td>
+                    <td>+15% AI visibility</td>
+                    <td>Month 1-2</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 2</strong></td>
+                    <td>Bullet Lists & Rankings</td>
+                    <td>
+                        <span class="language-tag">All Languages</span>
+                    </td>
+                    <td>+25% AI visibility</td>
+                    <td>Month 2-3</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 3</strong></td>
+                    <td>Comparison Tables</td>
+                    <td>
+                        <span class="language-tag">EN</span>
+                        <span class="language-tag">ES</span>
+                        <span class="language-tag">IT</span>
+                    </td>
+                    <td>+20% AI visibility</td>
+                    <td>Month 3-4</td>
+                </tr>
+                <tr>
+                    <td><strong>Phase 4</strong></td>
+                    <td>Technical Specs & User Cases</td>
+                    <td>
+                        <span class="language-tag">JP</span>
+                        <span class="language-tag">KR</span>
+                    </td>
+                    <td>+15% AI visibility</td>
+                    <td>Month 4-6</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Strategic Recommendations -->
+    <div class="card full-width">
+        <h3>Strategic Content Structure Recommendations</h3>
+        <div class="recommendation-grid">
+            <div class="recommendation-card">
+                <h4>1. Implement Structured Q&A Format</h4>
+                <p>Create comprehensive FAQ sections using natural language questions that mirror user queries. Each answer should be detailed and self-contained.</p>
+                <p><strong>Example:</strong> "How do Titika leggings compare to Lululemon?" with structured comparison points.</p>
+                <span class="priority-badge priority-critical">Critical Priority</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>2. Develop Multi-Language Bullet Lists</h4>
+                <p>Structure all product features, benefits, and comparisons as scannable bullet points across all 7 languages.</p>
+                <p><strong>Impact:</strong> 4x higher AI pickup rate for structured content.</p>
+                <span class="priority-badge priority-critical">Critical Priority</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>3. Create "Best Of" Rankings</h4>
+                <p>Publish and distribute "Top 10" style content featuring Titika alongside competitors in multiple languages.</p>
+                <p><strong>Target:</strong> 50+ ranking articles across all platforms.</p>
+                <span class="priority-badge priority-high">High Priority</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>4. Build Comparison Tables</h4>
+                <p>Develop detailed comparison matrices for Titika vs. each major competitor with clear, data-driven metrics.</p>
+                <p><strong>Format:</strong> Structured tables with fabric, price, features, and performance data.</p>
+                <span class="priority-badge priority-high">High Priority</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>5. Technical Specification Library</h4>
+                <p>Create detailed technical documentation with specifications, percentages, and lab test results in bullet format.</p>
+                <p><strong>Key:</strong> Include verifiable data points that AI can confidently cite.</p>
+                <span class="priority-badge priority-medium">Medium Priority</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>6. Localize Content Structure</h4>
+                <p>Adapt content formats for Japanese and Korean markets using numbered sequential points rather than bullets.</p>
+                <p><strong>Note:</strong> Maintain logical structure while respecting local writing conventions.</p>
+                <span class="priority-badge priority-medium">Medium Priority</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Metrics -->
+    <div class="card full-width">
+        <h3>Content Structure Success Metrics</h3>
+        <div class="dashboard-grid">
+            <div>
+                <h4>Current State</h4>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 15%"></div>
+                </div>
+                <p style="margin-top: 10px; color: #aaa;">15% Structured Content Coverage</p>
+                
+                <div class="progress-bar" style="margin-top: 20px;">
+                    <div class="progress-fill" style="width: 20%"></div>
+                </div>
+                <p style="margin-top: 10px; color: #aaa;">20% Multi-Language Optimization</p>
+            </div>
+            
+            <div>
+                <h4>6-Month Target</h4>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 80%"></div>
+                </div>
+                <p style="margin-top: 10px; color: #aaa;">80% Structured Content Coverage</p>
+                
+                <div class="progress-bar" style="margin-top: 20px;">
+                    <div class="progress-fill" style="width: 90%"></div>
+                </div>
+                <p style="margin-top: 10px; color: #aaa;">90% Multi-Language Optimization</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Titika AI Content Structure Analysis Dashboard | Data: January 2025</p>
+    </div>
+
+    <script>
+        // Content Structure Heatmap
+        const heatmapChart = echarts.init(document.getElementById('contentHeatmap'));
+        const heatmapOption = {
+            tooltip: {
+                position: 'top',
+                formatter: function(params) {
+                    const structures = ['FAQ/Q&A', 'Bullet Lists', 'Comparison Tables', 'Tech Specs', 'User Cases', 'Rankings', 'Descriptive'];
+                    const languages = ['English', 'French', 'German', 'Italian', 'Spanish', 'Japanese', 'Korean'];
+                    return `${languages[params.data[0]]} - ${structures[params.data[1]]}<br/>Usage Level: ${params.data[2]}`;
+                }
+            },
+            grid: {
+                height: '70%',
+                top: '10%'
+            },
+            xAxis: {
+                type: 'category',
+                data: ['English', 'French', 'German', 'Italian', 'Spanish', 'Japanese', 'Korean'],
+                splitArea: {
+                    show: true
+                },
+                axisLabel: {
+                    color: '#aaa'
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: ['FAQ/Q&A', 'Bullet Lists', 'Comparison Tables', 'Tech Specs', 'User Cases', 'Rankings', 'Descriptive'],
+                splitArea: {
+                    show: true
+                },
+                axisLabel: {
+                    color: '#aaa'
+                }
+            },
+            visualMap: {
+                min: 0,
+                max: 4,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: '0%',
+                inRange: {
+                    color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                },
+                textStyle: {
+                    color: '#aaa'
+                }
+            },
+            series: [{
+                name: 'Content Structure Usage',
+                type: 'heatmap',
+                data: [
+                    // English
+                    [0, 0, 3], [0, 1, 4], [0, 2, 3], [0, 3, 4], [0, 4, 2], [0, 5, 4], [0, 6, 3],
+                    // French
+                    [1, 0, 3], [1, 1, 4], [1, 2, 3], [1, 3, 3], [1, 4, 2], [1, 5, 4], [1, 6, 3],
+                    // German
+                    [2, 0, 2], [2, 1, 4], [2, 2, 3], [2, 3, 4], [2, 4, 2], [2, 5, 3], [2, 6, 3],
+                    // Italian
+                    [3, 0, 2], [3, 1, 4], [3, 2, 2], [3, 3, 3], [3, 4, 2], [3, 5, 4], [3, 6, 3],
+                    // Spanish
+                    [4, 0, 2], [4, 1, 4], [4, 2, 2], [4, 3, 3], [4, 4, 2], [4, 5, 4], [4, 6, 3],
+                    // Japanese
+                    [5, 0, 2], [5, 1, 3], [5, 2, 1], [5, 3, 3], [5, 4, 1], [5, 5, 4], [5, 6, 4],
+                    // Korean
+                    [6, 0, 2], [6, 1, 3], [6, 2, 1], [6, 3, 3], [6, 4, 1], [6, 5, 4], [6, 6, 3]
+                ],
+                label: {
+                    show: true,
+                    color: '#fff',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        };
+        heatmapChart.setOption(heatmapOption);
+        
+        // Content Format Effectiveness
+        const effectivenessChart = echarts.init(document.getElementById('formatEffectiveness'));
+        const effectivenessOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                max: 100,
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: '{value}%'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: ['Descriptive', 'User Cases', 'FAQ/Q&A', 'Tech Specs', 'Comparison Tables', 'Rankings', 'Bullet Lists'],
+                axisLabel: {
+                    color: '#aaa'
+                }
+            },
+            series: [{
+                name: 'AI Pickup Rate',
+                type: 'bar',
+                data: [35, 25, 60, 70, 75, 85, 90],
+                itemStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{
+                        offset: 0,
+                        color: '#e4007c'
+                    }, {
+                        offset: 1,
+                        color: '#ff4081'
+                    }])
+                },
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{c}%',
+                    color: '#fff'
+                }
+            }]
+        };
+        effectivenessChart.setOption(effectivenessOption);
+        
+        // Language Coverage Gap
+        const coverageChart = echarts.init(document.getElementById('languageCoverage'));
+        const coverageOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c}%'
+            },
+            radar: {
+                indicator: [
+                    { name: 'English', max: 100 },
+                    { name: 'French', max: 100 },
+                    { name: 'German', max: 100 },
+                    { name: 'Italian', max: 100 },
+                    { name: 'Spanish', max: 100 },
+                    { name: 'Japanese', max: 100 },
+                    { name: 'Korean', max: 100 }
+                ],
+                splitArea: {
+                    areaStyle: {
+                        color: ['rgba(228, 0, 124, 0.05)', 'rgba(228, 0, 124, 0.1)']
+                    }
+                },
+                axisName: {
+                    color: '#aaa'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            series: [{
+                name: 'Coverage',
+                type: 'radar',
+                data: [
+                    {
+                        value: [30, 10, 5, 0, 0, 0, 0],
+                        name: 'Current State',
+                        itemStyle: {
+                            color: '#ff1744'
+                        },
+                        lineStyle: {
+                            color: '#ff1744',
+                            width: 2
+                        },
+                        areaStyle: {
+                            opacity: 0.3
+                        }
+                    },
+                    {
+                        value: [90, 85, 85, 80, 80, 75, 75],
+                        name: 'Target State',
+                        itemStyle: {
+                            color: '#4caf50'
+                        },
+                        lineStyle: {
+                            color: '#4caf50',
+                            width: 2,
+                            type: 'dashed'
+                        },
+                        areaStyle: {
+                            opacity: 0.1
+                        }
+                    }
+                ]
+            }]
+        };
+        coverageChart.setOption(coverageOption);
+        
+        // Content Origin Distribution
+        const originChart = echarts.init(document.getElementById('contentOrigin'));
+        const originOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                textStyle: {
+                    color: '#aaa'
+                }
+            },
+            series: [{
+                name: 'Content Source',
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                itemStyle: {
+                    borderRadius: 10,
+                    borderColor: '#0a0a0a',
+                    borderWidth: 2
+                },
+                label: {
+                    show: false,
+                    position: 'center'
+                },
+                emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: '18',
+                        fontWeight: 'bold'
+                    }
+                },
+                labelLine: {
+                    show: false
+                },
+                data: [
+                    { value: 45, name: 'Media Articles', itemStyle: { color: '#ff6b6b' } },
+                    { value: 30, name: 'Brand Websites', itemStyle: { color: '#4ecdc4' } },
+                    { value: 15, name: 'User Reviews', itemStyle: { color: '#45b7d1' } },
+                    { value: 10, name: 'Forums/Q&A', itemStyle: { color: '#f9ca24' } }
+                ]
+            }]
+        };
+        originChart.setOption(originOption);
+        
+        // Competitor Format Usage
+        const competitorChart = echarts.init(document.getElementById('competitorFormats'));
+        const competitorOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: ['Lululemon', 'Nike', 'Adidas', 'Titika'],
+                textStyle: {
+                    color: '#aaa'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['FAQ', 'Bullets', 'Tables', 'Tech Specs', 'Rankings'],
+                axisLabel: {
+                    color: '#aaa'
+                }
+            },
+            yAxis: {
+                type: 'value',
+                axisLabel: {
+                    color: '#aaa'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            series: [
+                {
+                    name: 'Lululemon',
+                    type: 'bar',
+                    data: [85, 95, 70, 90, 80],
+                    itemStyle: { color: '#ff6b6b' }
+                },
+                {
+                    name: 'Nike',
+                    type: 'bar',
+                    data: [75, 90, 65, 85, 85],
+                    itemStyle: { color: '#4ecdc4' }
+                },
+                {
+                    name: 'Adidas',
+                    type: 'bar',
+                    data: [70, 85, 60, 80, 75],
+                    itemStyle: { color: '#45b7d1' }
+                },
+                {
+                    name: 'Titika',
+                    type: 'bar',
+                    data: [15, 20, 5, 10, 5],
+                    itemStyle: { color: '#e4007c' }
+                }
+            ]
+        };
+        competitorChart.setOption(competitorOption);
+        
+        // Priority Matrix
+        const priorityChart = echarts.init(document.getElementById('priorityMatrix'));
+        const priorityOption = {
+            tooltip: {
+                formatter: function(params) {
+                    return `${params.data[3]}<br/>Impact: ${params.data[0]}<br/>Effort: ${params.data[1]}<br/>Priority: ${params.data[2]}`;
+                }
+            },
+            grid: {
+                left: '5%',
+                right: '10%',
+                bottom: '10%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                name: 'Expected Impact',
+                nameLocation: 'middle',
+                nameGap: 30,
+                type: 'value',
+                max: 100,
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: '{value}%'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            yAxis: {
+                name: 'Implementation Effort',
+                nameLocation: 'middle',
+                nameGap: 40,
+                type: 'value',
+                max: 100,
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: '{value}%'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            series: [{
+                name: 'Content Strategies',
+                type: 'scatter',
+                symbolSize: function(data) {
+                    return data[2] * 5;
+                },
+                data: [
+                    [90, 30, 10, 'Bullet Lists'],
+                    [85, 40, 9, 'FAQ Pages'],
+                    [80, 50, 8, 'Rankings/Top Lists'],
+                    [75, 60, 7, 'Comparison Tables'],
+                    [70, 70, 6, 'Tech Specs'],
+                    [60, 40, 7, 'Multi-Language Content'],
+                    [50, 80, 4, 'User Case Studies'],
+                    [40, 30, 5, 'Descriptive Content']
+                ],
+                itemStyle: {
+                    color: function(params) {
+                        const priority = params.data[2];
+                        if (priority >= 8) return '#ff1744';
+                        if (priority >= 6) return '#ff9800';
+                        return '#4caf50';
+                    },
+                    opacity: 0.8,
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(228, 0, 124, 0.5)'
+                },
+                label: {
+                    show: true,
+                    formatter: function(params) {
+                        return params.data[3];
+                    },
+                    position: 'top',
+                    color: '#fff'
+                }
+            }]
+        };
+        priorityChart.setOption(priorityOption);
+        
+        // Implementation Timeline
+        const timelineChart = echarts.init(document.getElementById('implementationTimeline'));
+        const timelineOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
+                axisLabel: {
+                    color: '#aaa'
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Content Pieces',
+                axisLabel: {
+                    color: '#aaa'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            series: [
+                {
+                    name: 'FAQ/Q&A',
+                    type: 'bar',
+                    stack: 'total',
+                    data: [20, 30, 10, 5, 5, 5],
+                    itemStyle: { color: '#ff6b6b' }
+                },
+                {
+                    name: 'Bullet Lists',
+                    type: 'bar',
+                    stack: 'total',
+                    data: [10, 40, 60, 40, 30, 20],
+                    itemStyle: { color: '#4ecdc4' }
+                },
+                {
+                    name: 'Comparison Tables',
+                    type: 'bar',
+                    stack: 'total',
+                    data: [0, 5, 15, 20, 10, 5],
+                    itemStyle: { color: '#45b7d1' }
+                },
+                {
+                    name: 'Rankings',
+                    type: 'bar',
+                    stack: 'total',
+                    data: [5, 10, 15, 20, 15, 10],
+                    itemStyle: { color: '#f9ca24' }
+                },
+                {
+                    name: 'Technical Content',
+                    type: 'bar',
+                    stack: 'total',
+                    data: [5, 10, 20, 25, 20, 15],
+                    itemStyle: { color: '#ff4081' }
+                }
+            ]
+        };
+        timelineChart.setOption(timelineOption);
+        
+        // Responsive chart resizing
+        window.addEventListener('resize', function() {
+            heatmapChart.resize();
+            effectivenessChart.resize();
+            coverageChart.resize();
+            originChart.resize();
+            competitorChart.resize();
+            priorityChart.resize();
+            timelineChart.resize();
+        });
+    </script>
+</body>
+</html>

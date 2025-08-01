@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titika Multi-Language Authority Gap Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            border-radius: 20px;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .dashboard-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(228, 0, 124, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .dashboard-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #e4007c 0%, #ff4081 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .dashboard-header p {
+            font-size: 1.2em;
+            color: #888;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .critical-alert {
+            background: linear-gradient(135deg, #ff1744 0%, #d50000 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(255, 23, 68, 0.3);
+        }
+        
+        .critical-alert h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .alert-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .alert-metric {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .alert-metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .alert-metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .card {
+            background: #1a1a1a;
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #333;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(228, 0, 124, 0.2);
+        }
+        
+        .card h3 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: #e4007c;
+        }
+        
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .chart-container {
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .chart-container-large {
+            height: 500px;
+        }
+        
+        .chart-container-xlarge {
+            height: 600px;
+        }
+        
+        .authority-signals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .signal-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #e4007c;
+            transition: all 0.3s ease;
+        }
+        
+        .signal-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 15px rgba(228, 0, 124, 0.3);
+        }
+        
+        .signal-card h4 {
+            color: #e4007c;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .signal-status {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-present { background: #4caf50; }
+        .status-limited { background: #ff9800; }
+        .status-absent { background: #f44336; }
+        
+        .recommendation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .recommendation-card {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .recommendation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #e4007c 0%, #ff4081 100%);
+        }
+        
+        .recommendation-card h4 {
+            color: #e4007c;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .recommendation-card p {
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        
+        .priority-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .priority-critical { background: #ff1744; color: white; }
+        .priority-high { background: #ff9800; color: white; }
+        .priority-medium { background: #4caf50; color: white; }
+        
+        .gap-table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        
+        .gap-table th,
+        .gap-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        
+        .gap-table th {
+            background: #2a2a2a;
+            color: #e4007c;
+            font-weight: bold;
+        }
+        
+        .gap-table tr:hover {
+            background: #252525;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e4007c 0%, #ff4081 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .implementation-timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            display: flex;
+            margin-bottom: 30px;
+            align-items: flex-start;
+        }
+        
+        .timeline-marker {
+            width: 40px;
+            height: 40px;
+            background: #e4007c;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 20px;
+        }
+        
+        .timeline-content {
+            flex: 1;
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .timeline-content h4 {
+            color: #e4007c;
+            margin-bottom: 10px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 20px;
+            color: #666;
+            border-top: 1px solid #333;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-header h1 {
+                font-size: 1.8em;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .recommendation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>Titika Multi-Language Authority Gap Analysis</h1>
+        <p>Comprehensive Assessment of Brand Authority Signals Across Global AI Platforms</p>
+    </div>
+    
+    <div class="critical-alert">
+        <h2>⚠️ CRITICAL AUTHORITY DEFICIT</h2>
+        <p>Titika has minimal to zero authority signals across all languages, severely limiting AI platform visibility</p>
+        <div class="alert-metrics">
+            <div class="alert-metric">
+                <div class="alert-metric-value">1/21</div>
+                <div class="alert-metric-label">Authority Score vs Competitors</div>
+            </div>
+            <div class="alert-metric">
+                <div class="alert-metric-value">0</div>
+                <div class="alert-metric-label">Non-English Authority</div>
+            </div>
+            <div class="alert-metric">
+                <div class="alert-metric-value">95%</div>
+                <div class="alert-metric-label">Authority Gap</div>
+            </div>
+            <div class="alert-metric">
+                <div class="alert-metric-value">7</div>
+                <div class="alert-metric-label">Languages Analyzed</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Authority Signal Heatmap -->
+    <div class="card full-width">
+        <h3>Authority Signal Intensity Across Languages</h3>
+        <div id="authorityHeatmap" class="chart-container chart-container-xlarge"></div>
+    </div>
+    
+    <div class="dashboard-grid">
+        <!-- Authority Gap by Language -->
+        <div class="card">
+            <h3>Titika's Authority Gap by Language</h3>
+            <div id="languageGapChart" class="chart-container"></div>
+        </div>
+        
+        <!-- Authority Signal Types -->
+        <div class="card">
+            <h3>Authority Signal Type Analysis</h3>
+            <div id="signalTypesChart" class="chart-container"></div>
+        </div>
+        
+        <!-- Competitive Authority Score -->
+        <div class="card">
+            <h3>Overall Authority Score Comparison</h3>
+            <div id="authorityScoreChart" class="chart-container"></div>
+        </div>
+        
+        <!-- Coverage Quality Analysis -->
+        <div class="card">
+            <h3>Coverage Quality Metrics</h3>
+            <div id="coverageQualityChart" class="chart-container"></div>
+        </div>
+    </div>
+    
+    <!-- Authority Signal Status -->
+    <div class="card full-width">
+        <h3>Titika's Authority Signal Status</h3>
+        <div class="authority-signals">
+            <div class="signal-card">
+                <h4>Mainstream Media Coverage</h4>
+                <p>Major news outlets and publications</p>
+                <div class="signal-status">
+                    <div class="status-indicator status-absent"></div>
+                    <span>Absent (No Reuters, Forbes, etc.)</span>
+                </div>
+            </div>
+            
+            <div class="signal-card">
+                <h4>Industry Research & Reports</h4>
+                <p>Market research and whitepapers</p>
+                <div class="signal-status">
+                    <div class="status-indicator status-absent"></div>
+                    <span>Absent (No industry analysis)</span>
+                </div>
+            </div>
+            
+            <div class="signal-card">
+                <h4>Third-Party Reviews</h4>
+                <p>Independent expert evaluations</p>
+                <div class="signal-status">
+                    <div class="status-indicator status-limited"></div>
+                    <span>Limited (Few niche blogs only)</span>
+                </div>
+            </div>
+            
+            <div class="signal-card">
+                <h4>Expert Commentary</h4>
+                <p>Industry analyst insights</p>
+                <div class="signal-status">
+                    <div class="status-indicator status-absent"></div>
+                    <span>Absent (No expert quotes)</span>
+                </div>
+            </div>
+            
+            <div class="signal-card">
+                <h4>Executive Viewpoints</h4>
+                <p>Founder/CEO interviews</p>
+                <div class="signal-status">
+                    <div class="status-indicator status-absent"></div>
+                    <span>Absent (No public profiles)</span>
+                </div>
+            </div>
+            
+            <div class="signal-card">
+                <h4>Technical Credentials</h4>
+                <p>Patents, lab data, certifications</p>
+                <div class="signal-status">
+                    <div class="status-indicator status-absent"></div>
+                    <span>Absent (No patents/studies)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Strategic Priority Matrix -->
+    <div class="card full-width">
+        <h3>Authority Building Priority Matrix</h3>
+        <div id="priorityMatrix" class="chart-container chart-container-large"></div>
+    </div>
+    
+    <!-- Implementation Roadmap -->
+    <div class="card full-width">
+        <h3>Authority Building Implementation Roadmap</h3>
+        <div class="implementation-timeline">
+            <div class="timeline-item">
+                <div class="timeline-marker">1</div>
+                <div class="timeline-content">
+                    <h4>Month 1-2: Press Coverage Boost</h4>
+                    <p>Target mainstream media in key markets with localized press releases and story pitches</p>
+                    <span class="priority-badge priority-critical">Critical Priority</span>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-marker">2</div>
+                <div class="timeline-content">
+                    <h4>Month 2-3: Industry Research Collaboration</h4>
+                    <p>Partner with research firms to publish whitepapers and technical studies</p>
+                    <span class="priority-badge priority-high">High Priority</span>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-marker">3</div>
+                <div class="timeline-content">
+                    <h4>Month 3-4: Expert Engagement</h4>
+                    <p>Secure third-party reviews and expert endorsements across multiple languages</p>
+                    <span class="priority-badge priority-high">High Priority</span>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-marker">4</div>
+                <div class="timeline-content">
+                    <h4>Month 4-6: Executive Visibility</h4>
+                    <p>Launch founder storytelling campaign with interviews and thought leadership</p>
+                    <span class="priority-badge priority-medium">Medium Priority</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Strategic Recommendations -->
+    <div class="card full-width">
+        <h3>Strategic Authority Building Recommendations</h3>
+        <div class="recommendation-grid">
+            <div class="recommendation-card">
+                <h4>1. Mainstream Media Offensive</h4>
+                <p>Launch aggressive PR campaign targeting tier-1 publications in all 7 languages. Focus on Forbes, Reuters, Business Insider for English; Le Monde for French; Der Spiegel for German.</p>
+                <p><strong>Target:</strong> 50+ media placements in 6 months</p>
+                <span class="priority-badge priority-critical">Critical</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>2. Industry Research Partnerships</h4>
+                <p>Commission or co-author industry reports on athleisure trends, technical fabric innovations, or market analysis where Titika is featured prominently.</p>
+                <p><strong>Target:</strong> 3-5 whitepapers/studies</p>
+                <span class="priority-badge priority-critical">Critical</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>3. Multi-Language Wikipedia Presence</h4>
+                <p>Create Wikipedia entries in all 7 languages, starting with English. Gather sufficient third-party sources first to meet notability guidelines.</p>
+                <p><strong>Target:</strong> Wikipedia pages in 7 languages</p>
+                <span class="priority-badge priority-high">High</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>4. Expert Review Campaign</h4>
+                <p>Send products to 100+ respected reviewers, fitness experts, and gear testers across all target markets. Focus on those with authority in their regions.</p>
+                <p><strong>Target:</strong> 100+ independent reviews</p>
+                <span class="priority-badge priority-high">High</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>5. Technical Certification Drive</h4>
+                <p>Obtain OEKO-TEX, Bluesign, or similar certifications. File patents for any unique designs. Partner with universities for performance testing.</p>
+                <p><strong>Target:</strong> 5+ certifications/patents</p>
+                <span class="priority-badge priority-medium">Medium</span>
+            </div>
+            
+            <div class="recommendation-card">
+                <h4>6. Founder Visibility Campaign</h4>
+                <p>Position Titika's founder as a thought leader through interviews, conference speaking, and op-eds in business publications.</p>
+                <p><strong>Target:</strong> 20+ executive features</p>
+                <span class="priority-badge priority-medium">Medium</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Success Metrics -->
+    <div class="card full-width">
+        <h3>Authority Building Success Metrics</h3>
+        <table class="gap-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Current State</th>
+                    <th>6-Month Target</th>
+                    <th>12-Month Target</th>
+                    <th>Progress</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Authority Score (0-21)</td>
+                    <td>1</td>
+                    <td>7</td>
+                    <td>14</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 5%"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Languages with Authority</td>
+                    <td>1 (English only)</td>
+                    <td>4</td>
+                    <td>7</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 14%"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Media Mentions</td>
+                    <td>5/year</td>
+                    <td>50/month</td>
+                    <td>100/month</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 5%"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Expert Reviews</td>
+                    <td>~5</td>
+                    <td>50</td>
+                    <td>150</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 3%"></div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Industry Reports</td>
+                    <td>0</td>
+                    <td>3</td>
+                    <td>10</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="footer">
+        <p>Titika Authority Gap Analysis Dashboard | Data: January 2025</p>
+    </div>
+
+    <script>
+        // Authority Signal Heatmap
+        const heatmapChart = echarts.init(document.getElementById('authorityHeatmap'));
+        const heatmapOption = {
+            tooltip: {
+                position: 'top',
+                formatter: function(params) {
+                    const brands = ['Titika', 'Lululemon', 'Nike', 'Adidas', 'Alo Yoga', 'MAIA Active', 'Li Ning'];
+                    const languages = ['English', 'French', 'German', 'Italian', 'Spanish', 'Japanese', 'Korean'];
+                    const scores = ['None (0)', 'Low (1)', 'Medium (2)', 'High (3)'];
+                    return `${brands[params.data[0]]} - ${languages[params.data[1]]}<br/>Authority: ${scores[params.data[2]]}`;
+                }
+            },
+            grid: {
+                height: '70%',
+                top: '10%'
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Titika', 'Lululemon', 'Nike', 'Adidas', 'Alo Yoga', 'MAIA Active', 'Li Ning'],
+                splitArea: {
+                    show: true
+                },
+                axisLabel: {
+                    color: '#aaa',
+                    interval: 0,
+                    rotate: 45
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: ['English', 'French', 'German', 'Italian', 'Spanish', 'Japanese', 'Korean'],
+                splitArea: {
+                    show: true
+                },
+                axisLabel: {
+                    color: '#aaa'
+                }
+            },
+            visualMap: {
+                min: 0,
+                max: 3,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: '0%',
+                inRange: {
+                    color: ['#313695', '#4575b4', '#abd9e9', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                },
+                textStyle: {
+                    color: '#aaa'
+                },
+                text: ['High Authority', 'No Authority']
+            },
+            series: [{
+                name: 'Authority Signal',
+                type: 'heatmap',
+                data: [
+                    // Titika
+                    [0, 0, 1], [0, 1, 0], [0, 2, 0], [0, 3, 0], [0, 4, 0], [0, 5, 0], [0, 6, 0],
+                    // Lululemon
+                    [1, 0, 3], [1, 1, 2], [1, 2, 2], [1, 3, 2], [1, 4, 2], [1, 5, 2], [1, 6, 2],
+                    // Nike
+                    [2, 0, 3], [2, 1, 3], [2, 2, 3], [2, 3, 3], [2, 4, 3], [2, 5, 3], [2, 6, 3],
+                    // Adidas
+                    [3, 0, 3], [3, 1, 3], [3, 2, 3], [3, 3, 3], [3, 4, 3], [3, 5, 3], [3, 6, 3],
+                    // Alo Yoga
+                    [4, 0, 2], [4, 1, 1], [4, 2, 1], [4, 3, 1], [4, 4, 1], [4, 5, 1], [4, 6, 1],
+                    // MAIA Active
+                    [5, 0, 1], [5, 1, 0], [5, 2, 0], [5, 3, 0], [5, 4, 0], [5, 5, 0], [5, 6, 0],
+                    // Li Ning
+                    [6, 0, 2], [6, 1, 1], [6, 2, 1], [6, 3, 1], [6, 4, 1], [6, 5, 1], [6, 6, 1]
+                ],
+                label: {
+                    show: true,
+                    color: '#fff',
+                    fontSize: 12,
+                    fontWeight: 'bold'
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }]
+        };
+        heatmapChart.setOption(heatmapOption);
+        
+        // Language Gap Chart
+        const languageGapChart = echarts.init(document.getElementById('languageGapChart'));
+        const languageGapOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['English', 'French', 'German', 'Italian', 'Spanish', 'Japanese', 'Korean'],
+                axisLabel: {
+                    color: '#aaa',
+                    interval: 0,
+                    rotate: 30
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Authority Gap %',
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: '{value}%'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            series: [{
+                name: 'Authority Gap',
+                type: 'bar',
+                data: [
+                    { value: 67, itemStyle: { color: '#ff9800' } },
+                    { value: 100, itemStyle: { color: '#f44336' } },
+                    { value: 100, itemStyle: { color: '#f44336' } },
+                    { value: 100, itemStyle: { color: '#f44336' } },
+                    { value: 100, itemStyle: { color: '#f44336' } },
+                    { value: 100, itemStyle: { color: '#f44336' } },
+                    { value: 100, itemStyle: { color: '#f44336' } }
+                ],
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: '{c}%',
+                    color: '#fff'
+                }
+            }]
+        };
+        languageGapChart.setOption(languageGapOption);
+        
+        // Authority Signal Types
+        const signalTypesChart = echarts.init(document.getElementById('signalTypesChart'));
+        const signalTypesOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c} ({d}%)'
+            },
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                textStyle: {
+                    color: '#aaa'
+                }
+            },
+            series: [{
+                name: 'Signal Type',
+                type: 'pie',
+                radius: ['40%', '70%'],
+                avoidLabelOverlap: false,
+                itemStyle: {
+                    borderRadius: 10,
+                    borderColor: '#0a0a0a',
+                    borderWidth: 2
+                },
+                label: {
+                    show: false,
+                    position: 'center'
+                },
+                emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: '18',
+                        fontWeight: 'bold'
+                    }
+                },
+                labelLine: {
+                    show: false
+                },
+                data: [
+                    { value: 0, name: 'Media Coverage', itemStyle: { color: '#f44336' } },
+                    { value: 0, name: 'Industry Research', itemStyle: { color: '#e91e63' } },
+                    { value: 5, name: 'Reviews (Limited)', itemStyle: { color: '#ff9800' } },
+                    { value: 0, name: 'Expert Commentary', itemStyle: { color: '#9c27b0' } },
+                    { value: 0, name: 'Executive Views', itemStyle: { color: '#673ab7' } },
+                    { value: 0, name: 'Technical Data', itemStyle: { color: '#3f51b5' } }
+                ]
+            }]
+        };
+        signalTypesChart.setOption(signalTypesOption);
+        
+        // Authority Score Comparison
+        const authorityScoreChart = echarts.init(document.getElementById('authorityScoreChart'));
+        const authorityScoreOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                max: 21,
+                axisLabel: {
+                    color: '#aaa'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: ['Li Ning', 'MAIA Active', 'Alo Yoga', 'Titika', 'Lululemon', 'Adidas', 'Nike'],
+                axisLabel: {
+                    color: '#aaa'
+                }
+            },
+            series: [{
+                name: 'Authority Score',
+                type: 'bar',
+                data: [
+                    { value: 9, itemStyle: { color: '#4caf50' } },
+                    { value: 1, itemStyle: { color: '#ff9800' } },
+                    { value: 8, itemStyle: { color: '#4caf50' } },
+                    { value: 1, itemStyle: { color: '#f44336' } },
+                    { value: 16, itemStyle: { color: '#2196f3' } },
+                    { value: 21, itemStyle: { color: '#3f51b5' } },
+                    { value: 21, itemStyle: { color: '#3f51b5' } }
+                ],
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{c}/21',
+                    color: '#fff'
+                }
+            }]
+        };
+        authorityScoreChart.setOption(authorityScoreOption);
+        
+        // Coverage Quality Chart
+        const coverageQualityChart = echarts.init(document.getElementById('coverageQualityChart'));
+        const coverageQualityOption = {
+            tooltip: {
+                trigger: 'axis'
+            },
+            radar: {
+                indicator: [
+                    { name: 'Media Tier', max: 100 },
+                    { name: 'Source Credibility', max: 100 },
+                    { name: 'Content Depth', max: 100 },
+                    { name: 'Expert Validation', max: 100 },
+                    { name: 'Multi-Language', max: 100 },
+                    { name: 'Technical Authority', max: 100 }
+                ],
+                splitArea: {
+                    areaStyle: {
+                        color: ['rgba(228, 0, 124, 0.05)', 'rgba(228, 0, 124, 0.1)']
+                    }
+                },
+                axisName: {
+                    color: '#aaa'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            series: [{
+                name: 'Coverage Quality',
+                type: 'radar',
+                data: [
+                    {
+                        value: [10, 15, 10, 0, 5, 0],
+                        name: 'Titika',
+                        itemStyle: {
+                            color: '#e4007c'
+                        },
+                        lineStyle: {
+                            color: '#e4007c',
+                            width: 2
+                        },
+                        areaStyle: {
+                            opacity: 0.3
+                        }
+                    },
+                    {
+                        value: [90, 95, 85, 90, 95, 95],
+                        name: 'Nike (Benchmark)',
+                        itemStyle: {
+                            color: '#4ecdc4'
+                        },
+                        lineStyle: {
+                            color: '#4ecdc4',
+                            width: 2,
+                            type: 'dashed'
+                        },
+                        areaStyle: {
+                            opacity: 0.1
+                        }
+                    }
+                ]
+            }]
+        };
+        coverageQualityChart.setOption(coverageQualityOption);
+        
+        // Priority Matrix
+        const priorityChart = echarts.init(document.getElementById('priorityMatrix'));
+        const priorityOption = {
+            tooltip: {
+                formatter: function(params) {
+                    return `${params.data[3]}<br/>Impact: ${params.data[0]}<br/>Effort: ${params.data[1]}<br/>Timeframe: ${params.data[2]} months`;
+                }
+            },
+            grid: {
+                left: '5%',
+                right: '10%',
+                bottom: '10%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                name: 'Expected Impact',
+                nameLocation: 'middle',
+                nameGap: 30,
+                type: 'value',
+                max: 100,
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: '{value}%'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            yAxis: {
+                name: 'Implementation Effort',
+                nameLocation: 'middle',
+                nameGap: 40,
+                type: 'value',
+                max: 100,
+                axisLabel: {
+                    color: '#aaa',
+                    formatter: '{value}%'
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: '#333'
+                    }
+                }
+            },
+            series: [{
+                name: 'Authority Building Strategies',
+                type: 'scatter',
+                symbolSize: function(data) {
+                    return data[2] * 10;
+                },
+                data: [
+                    [90, 60, 3, 'Press Coverage Campaign'],
+                    [85, 70, 4, 'Industry Research'],
+                    [80, 40, 2, 'Wikipedia Presence'],
+                    [75, 50, 3, 'Expert Reviews'],
+                    [70, 80, 6, 'Technical Certifications'],
+                    [65, 45, 4, 'Executive Visibility'],
+                    [60, 30, 2, 'Local Language Content'],
+                    [55, 90, 8, 'Patent Filing']
+                ],
+                itemStyle: {
+                    color: function(params) {
+                        const effort = params.data[1];
+                        if (effort <= 40) return '#4caf50';
+                        if (effort <= 70) return '#ff9800';
+                        return '#f44336';
+                    },
+                    opacity: 0.8,
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(228, 0, 124, 0.5)'
+                },
+                label: {
+                    show: true,
+                    formatter: function(params) {
+                        return params.data[3];
+                    },
+                    position: 'top',
+                    color: '#fff',
+                    fontSize: 11
+                }
+            }]
+        };
+        priorityChart.setOption(priorityOption);
+        
+        // Responsive chart resizing
+        window.addEventListener('resize', function() {
+            heatmapChart.resize();
+            languageGapChart.resize();
+            signalTypesChart.resize();
+            authorityScoreChart.resize();
+            coverageQualityChart.resize();
+            priorityChart.resize();
+        });
+    </script>
+</body>
+</html>

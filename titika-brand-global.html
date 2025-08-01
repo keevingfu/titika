@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Titika Brand Analysis Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6A4C93;
+            --secondary: #A06CD5;
+            --accent: #FFB4A2;
+            --success: #81B29A;
+            --warning: #F2CC8F;
+            --danger: #E07A5F;
+            --dark: #1A1423;
+            --light: #F8F9FA;
+            --gray: #6C757D;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(106, 76, 147, 0.3);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .metric-card {
+            text-align: center;
+            background: linear-gradient(135deg, rgba(106, 76, 147, 0.05) 0%, rgba(160, 108, 213, 0.05) 100%);
+        }
+
+        .metric-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            color: white;
+            box-shadow: 0 5px 15px rgba(106, 76, 147, 0.3);
+        }
+
+        .metric-value {
+            font-size: 2.8em;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            color: var(--gray);
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.9em;
+            margin-top: 10px;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .positive {
+            background: rgba(129, 178, 154, 0.2);
+            color: var(--success);
+        }
+
+        .negative {
+            background: rgba(224, 122, 95, 0.2);
+            color: var(--danger);
+        }
+
+        .neutral {
+            background: rgba(242, 204, 143, 0.2);
+            color: var(--warning);
+        }
+
+        .chart-container {
+            grid-column: span 2;
+            min-height: 400px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .section-title {
+            font-size: 1.6em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 2px;
+        }
+
+        .insights-box {
+            background: linear-gradient(135deg, rgba(106, 76, 147, 0.05) 0%, rgba(160, 108, 213, 0.05) 100%);
+            border-left: 4px solid var(--primary);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .insights-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1em;
+        }
+
+        .insights-title::before {
+            content: '💡';
+            font-size: 1.2em;
+        }
+
+        .insight-item {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .insight-item::before {
+            content: '▸';
+            position: absolute;
+            left: 8px;
+            color: var(--secondary);
+            font-weight: bold;
+        }
+
+        .insight-item strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .swot-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .swot-item {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .swot-item.strengths {
+            border-color: var(--success);
+            background: linear-gradient(135deg, rgba(129, 178, 154, 0.05) 0%, rgba(129, 178, 154, 0.1) 100%);
+        }
+
+        .swot-item.weaknesses {
+            border-color: var(--danger);
+            background: linear-gradient(135deg, rgba(224, 122, 95, 0.05) 0%, rgba(224, 122, 95, 0.1) 100%);
+        }
+
+        .swot-item.opportunities {
+            border-color: var(--warning);
+            background: linear-gradient(135deg, rgba(242, 204, 143, 0.05) 0%, rgba(242, 204, 143, 0.1) 100%);
+        }
+
+        .swot-item.threats {
+            border-color: var(--gray);
+            background: linear-gradient(135deg, rgba(108, 117, 125, 0.05) 0%, rgba(108, 117, 125, 0.1) 100%);
+        }
+
+        .swot-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .swot-item.strengths .swot-title { color: var(--success); }
+        .swot-item.weaknesses .swot-title { color: var(--danger); }
+        .swot-item.opportunities .swot-title { color: var(--warning); }
+        .swot-item.threats .swot-title { color: var(--gray); }
+
+        .swot-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .swot-list li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .swot-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .swot-item.strengths li::before { color: var(--success); }
+        .swot-item.weaknesses li::before { color: var(--danger); }
+        .swot-item.opportunities li::before { color: var(--warning); }
+        .swot-item.threats li::before { color: var(--gray); }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 25px;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tab-button:hover {
+            background: rgba(106, 76, 147, 0.1);
+        }
+
+        .tab-button.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .product-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .product-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .product-count {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .product-name {
+            font-size: 0.9em;
+            color: var(--gray);
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                grid-column: span 1;
+                min-height: 300px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .swot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Titika Active Couture Brand Analysis</h1>
+            <p>Comprehensive strategic analysis of market positioning, competitive landscape, and growth opportunities</p>
+        </div>
+
+        <!-- Core Metrics -->
+        <div class="dashboard-grid">
+            <div class="card metric-card">
+                <div class="metric-icon">🏢</div>
+                <div class="metric-label">Founded</div>
+                <div class="metric-value">2009</div>
+                <div class="metric-change neutral">North America Origin</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-icon">🏪</div>
+                <div class="metric-label">Physical Stores</div>
+                <div class="metric-value">11</div>
+                <div class="metric-change positive">North America</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-icon">🌏</div>
+                <div class="metric-label">China Entry</div>
+                <div class="metric-value">2018</div>
+                <div class="metric-change neutral">Market Expansion</div>
+            </div>
+
+            <div class="card metric-card">
+                <div class="metric-icon">📊</div>
+                <div class="metric-label">Global Rank</div>
+                <div class="metric-value">93/166</div>
+                <div class="metric-change negative">Mid-tier Position</div>
+            </div>
+        </div>
+
+        <!-- Product Portfolio Analysis -->
+        <div class="card full-width">
+            <h3 class="section-title">Product Portfolio Distribution</h3>
+            <div class="tabs">
+                <button class="tab-button active" onclick="switchTab('portfolio-overview')">Overview</button>
+                <button class="tab-button" onclick="switchTab('portfolio-details')">Detailed Breakdown</button>
+            </div>
+            
+            <div id="portfolio-overview" class="tab-content active">
+                <div id="portfolioChart" style="height: 400px;"></div>
+                <div class="insights-box">
+                    <div class="insights-title">Portfolio Insights</div>
+                    <div class="insight-item"><strong>Dominant Categories:</strong> Leggings (40 variants) and Bras (31 variants) represent 35% of total product offerings</div>
+                    <div class="insight-item"><strong>Diversification:</strong> 18 distinct product categories show strong portfolio breadth</div>
+                    <div class="insight-item"><strong>Recommendation:</strong> Focus on hero products in top categories while maintaining variety for complete lifestyle offering</div>
+                </div>
+            </div>
+            
+            <div id="portfolio-details" class="tab-content">
+                <div class="product-grid">
+                    <div class="product-item">
+                        <div class="product-count">40</div>
+                        <div class="product-name">Leggings</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">31</div>
+                        <div class="product-name">Bras</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">25</div>
+                        <div class="product-name">Bottoms</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">25</div>
+                        <div class="product-name">Tanks</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">17</div>
+                        <div class="product-name">Shorts</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">13</div>
+                        <div class="product-name">Pants</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">9</div>
+                        <div class="product-name">Jackets</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">8</div>
+                        <div class="product-name">Short Sleeves</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">7</div>
+                        <div class="product-name">Long Sleeves</div>
+                    </div>
+                    <div class="product-item">
+                        <div class="product-count">7</div>
+                        <div class="product-name">Swimwear</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Market Positioning Analysis -->
+        <div class="dashboard-grid">
+            <div class="card chart-container">
+                <h3 class="section-title">China Market Share Comparison</h3>
+                <div id="marketShareChart" style="height: 400px;"></div>
+                <div class="insights-box">
+                    <div class="insights-title">Market Position Insights</div>
+                    <div class="insight-item"><strong>Market Leaders:</strong> Anta (23%) and Nike (20.7%) dominate China's athletic wear market</div>
+                    <div class="insight-item"><strong>Premium Segment:</strong> Lululemon's 36% YoY growth shows strong demand for premium athleisure</div>
+                    <div class="insight-item"><strong>Opportunity:</strong> Position Titika in the premium niche between mass market and ultra-premium</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="section-title">Competitive Positioning Matrix</h3>
+                <div id="positioningChart" style="height: 400px;"></div>
+            </div>
+        </div>
+
+        <!-- Digital Marketing Strategy Analysis -->
+        <div class="card full-width">
+            <h3 class="section-title">Digital Marketing Ecosystem Comparison</h3>
+            <div id="digitalStrategyChart" style="height: 500px;"></div>
+            <div class="insights-box">
+                <div class="insights-title">Digital Strategy Gap Analysis</div>
+                <div class="insight-item"><strong>Critical Gap:</strong> Titika lacks official presence on key Chinese platforms (WeChat, Xiaohongshu, Douyin)</div>
+                <div class="insight-item"><strong>Competitor Advantage:</strong> Lululemon leverages WeChat communities; Nike uses multi-matrix accounts</div>
+                <div class="insight-item"><strong>Immediate Action:</strong> Establish official accounts on top 3 Chinese platforms within 60 days</div>
+                <div class="insight-item"><strong>Investment Priority:</strong> Allocate 40% of marketing budget to Chinese digital ecosystem development</div>
+            </div>
+        </div>
+
+        <!-- SWOT Analysis -->
+        <div class="card full-width">
+            <h3 class="section-title">Strategic SWOT Analysis</h3>
+            <div class="swot-grid">
+                <div class="swot-item strengths">
+                    <div class="swot-title">Strengths</div>
+                    <ul class="swot-list">
+                        <li>Innovative fabric technology (SUPPLEX®, CELLIANT®)</li>
+                        <li>Multi-functional athleisure positioning</li>
+                        <li>Strong North American foundation (11 stores)</li>
+                        <li>East-West cultural fusion in design</li>
+                        <li>"Say no to all established norms" philosophy</li>
+                    </ul>
+                </div>
+                <div class="swot-item weaknesses">
+                    <div class="swot-title">Weaknesses</div>
+                    <ul class="swot-list">
+                        <li>Limited Chinese digital presence</li>
+                        <li>Inconsistent China operation dates (2018 vs 2024)</li>
+                        <li>Low social media ROI on Instagram/Facebook</li>
+                        <li>Product comfort issues in warm climates</li>
+                        <li>Ranked 93/166 among competitors</li>
+                    </ul>
+                </div>
+                <div class="swot-item opportunities">
+                    <div class="swot-title">Opportunities</div>
+                    <ul class="swot-list">
+                        <li>Growing athleisure market (4.41% CAGR)</li>
+                        <li>Rising health consciousness in China</li>
+                        <li>Leverage "guochao" trend with cultural fusion</li>
+                        <li>Target premium/niche market segment</li>
+                        <li>Establish strong Chinese digital ecosystem</li>
+                    </ul>
+                </div>
+                <div class="swot-item threats">
+                    <div class="swot-title">Threats</div>
+                    <ul class="swot-list">
+                        <li>Intense competition from global giants</li>
+                        <li>Strong local Chinese brands (Anta, Li-Ning)</li>
+                        <li>Risk of counterfeit products</li>
+                        <li>Need for continuous innovation</li>
+                        <li>Local preference adaptation challenges</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technology & Innovation -->
+        <div class="dashboard-grid">
+            <div class="card chart-container">
+                <h3 class="section-title">Fabric Technology Innovation Index</h3>
+                <div id="techRadarChart" style="height: 400px;"></div>
+                <div class="insights-box">
+                    <div class="insights-title">Technology Advantages</div>
+                    <div class="insight-item"><strong>Key Differentiator:</strong> Advanced fabric portfolio including SUPPLEX®, CELLIANT®, Silver Anti-bacterial</div>
+                    <div class="insight-item"><strong>Market Position:</strong> Technology leadership can justify premium pricing</div>
+                    <div class="insight-item"><strong>Communication Need:</strong> Better storytelling required to convey technical benefits to consumers</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="section-title">Brand Performance Metrics</h3>
+                <div id="performanceChart" style="height: 400px;"></div>
+            </div>
+        </div>
+
+        <!-- Strategic Recommendations -->
+        <div class="card full-width">
+            <h3 class="section-title">Strategic Growth Roadmap</h3>
+            <div id="roadmapChart" style="height: 450px;"></div>
+            <div class="insights-box">
+                <div class="insights-title">Priority Actions for China Market Success</div>
+                <div class="insight-item"><strong>Phase 1 (0-3 months):</strong> Establish official Chinese social media presence, clarify operational status</div>
+                <div class="insight-item"><strong>Phase 2 (3-6 months):</strong> Launch localized KOL program, enter major e-commerce platforms</div>
+                <div class="insight-item"><strong>Phase 3 (6-12 months):</strong> Develop China-specific product lines, implement livestream commerce</div>
+                <div class="insight-item"><strong>Success Metric:</strong> Achieve 15% market awareness among target demographic within 12 months</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching function
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Product Portfolio Chart
+        const portfolioChart = echarts.init(document.getElementById('portfolioChart'));
+        const portfolioOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: '{b}: {c} products ({d}%)'
+            },
+            legend: {
+                type: 'scroll',
+                orient: 'vertical',
+                right: '10%',
+                top: 'center',
+                textStyle: {
+                    fontSize: 12
+                }
+            },
+            series: [{
+                name: 'Product Categories',
+                type: 'pie',
+                radius: ['35%', '70%'],
+                center: ['40%', '50%'],
+                avoidLabelOverlap: false,
+                itemStyle: {
+                    borderRadius: 10,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                },
+                label: {
+                    show: false,
+                    position: 'center'
+                },
+                emphasis: {
+                    label: {
+                        show: true,
+                        fontSize: '18',
+                        fontWeight: 'bold'
+                    }
+                },
+                labelLine: {
+                    show: false
+                },
+                data: [
+                    { value: 40, name: 'Leggings', itemStyle: { color: '#6A4C93' } },
+                    { value: 31, name: 'Bras', itemStyle: { color: '#A06CD5' } },
+                    { value: 25, name: 'Bottoms', itemStyle: { color: '#FFB4A2' } },
+                    { value: 25, name: 'Tanks', itemStyle: { color: '#81B29A' } },
+                    { value: 17, name: 'Shorts', itemStyle: { color: '#F2CC8F' } },
+                    { value: 13, name: 'Pants', itemStyle: { color: '#E07A5F' } },
+                    { value: 9, name: 'Jackets', itemStyle: { color: '#7B9E87' } },
+                    { value: 8, name: 'Short Sleeves', itemStyle: { color: '#94A89A' } },
+                    { value: 7, name: 'Long Sleeves', itemStyle: { color: '#CBC5EA' } },
+                    { value: 7, name: 'Swimwear', itemStyle: { color: '#F4A261' } },
+                    { value: 5, name: 'T-Shirts', itemStyle: { color: '#E76F51' } },
+                    { value: 4, name: 'Skirts', itemStyle: { color: '#C9ADA7' } },
+                    { value: 4, name: 'Bodysuits', itemStyle: { color: '#A8DADC' } },
+                    { value: 3, name: 'Dresses', itemStyle: { color: '#457B9D' } },
+                    { value: 3, name: 'Hoodies', itemStyle: { color: '#1D3557' } },
+                    { value: 2, name: 'Sweaters', itemStyle: { color: '#F1FAEE' } },
+                    { value: 1, name: 'Crops', itemStyle: { color: '#E9C46A' } },
+                    { value: 1, name: 'Sweatshirts', itemStyle: { color: '#264653' } }
+                ]
+            }]
+        };
+        portfolioChart.setOption(portfolioOption);
+
+        // Market Share Chart
+        const marketShareChart = echarts.init(document.getElementById('marketShareChart'));
+        const marketShareOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function(params) {
+                    return params[0].name + '<br/>' + 
+                           params[0].seriesName + ': ' + params[0].value + '%';
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                top: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Anta', 'Nike', 'Li-Ning', 'Adidas', 'Lululemon*', 'Others', 'Titika**'],
+                axisLabel: {
+                    interval: 0,
+                    rotate: 30
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Market Share (%)',
+                axisLabel: {
+                    formatter: '{value}%'
+                }
+            },
+            series: [{
+                name: 'Market Share',
+                type: 'bar',
+                data: [
+                    { value: 23, itemStyle: { color: '#6A4C93' } },
+                    { value: 20.7, itemStyle: { color: '#A06CD5' } },
+                    { value: 9.4, itemStyle: { color: '#FFB4A2' } },
+                    { value: 8.7, itemStyle: { color: '#81B29A' } },
+                    { value: 3.5, itemStyle: { color: '#F2CC8F' } },
+                    { value: 34.2, itemStyle: { color: '#E0E0E0' } },
+                    { value: 0.5, itemStyle: { color: '#E07A5F' } }
+                ],
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: '{c}%'
+                }
+            }]
+        };
+        marketShareChart.setOption(marketShareOption);
+
+        // Positioning Chart
+        const positioningChart = echarts.init(document.getElementById('positioningChart'));
+        const positioningOption = {
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    return params.data.name + '<br/>Price Range: ' + params.data.value[0] + 
+                           '<br/>Fashion Index: ' + params.data.value[1];
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '10%',
+                bottom: '3%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                name: 'Price Range (Low to High)',
+                nameLocation: 'middle',
+                nameGap: 30,
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed'
+                    }
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Fashion vs Function',
+                nameLocation: 'middle',
+                nameGap: 40,
+                splitLine: {
+                    lineStyle: {
+                        type: 'dashed'
+                    }
+                }
+            },
+            series: [{
+                name: 'Brand Positioning',
+                type: 'scatter',
+                symbolSize: function(data) {
+                    return Math.sqrt(data[2]) * 5;
+                },
+                label: {
+                    show: true,
+                    formatter: '{b}',
+                    position: 'top'
+                },
+                data: [
+                    { name: 'Nike', value: [70, 60, 100], itemStyle: { color: '#A06CD5' } },
+                    { name: 'Lululemon', value: [90, 85, 80], itemStyle: { color: '#F2CC8F' } },
+                    { name: 'Anta', value: [40, 50, 90], itemStyle: { color: '#6A4C93' } },
+                    { name: 'Li-Ning', value: [45, 65, 60], itemStyle: { color: '#FFB4A2' } },
+                    { name: 'Adidas', value: [65, 70, 85], itemStyle: { color: '#81B29A' } },
+                    { name: 'Alo Yoga', value: [80, 90, 40], itemStyle: { color: '#94A89A' } },
+                    { name: 'Fila', value: [55, 75, 50], itemStyle: { color: '#CBC5EA' } },
+                    { name: 'Titika', value: [75, 80, 20], itemStyle: { color: '#E07A5F' } }
+                ]
+            }]
+        };
+        positioningChart.setOption(positioningOption);
+
+        // Digital Strategy Chart
+        const digitalStrategyChart = echarts.init(document.getElementById('digitalStrategyChart'));
+        const digitalStrategyOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            legend: {
+                data: ['Strong Presence', 'Moderate Presence', 'Weak/No Presence'],
+                top: 'top'
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '15%',
+                top: '10%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['WeChat', 'Xiaohongshu', 'Douyin', 'Weibo', 'Tmall/JD', 'Livestream', 'KOL Program'],
+                axisLabel: {
+                    interval: 0,
+                    rotate: 45
+                }
+            },
+            yAxis: {
+                type: 'value',
+                name: 'Brands',
+                max: 8
+            },
+            series: [
+                {
+                    name: 'Strong Presence',
+                    type: 'bar',
+                    stack: 'total',
+                    data: [6, 5, 5, 6, 7, 4, 6],
+                    itemStyle: { color: '#81B29A' }
+                },
+                {
+                    name: 'Moderate Presence',
+                    type: 'bar',
+                    stack: 'total',
+                    data: [1, 2, 1, 1, 0, 2, 1],
+                    itemStyle: { color: '#F2CC8F' }
+                },
+                {
+                    name: 'Weak/No Presence',
+                    type: 'bar',
+                    stack: 'total',
+                    emphasis: {
+                        focus: 'series'
+                    },
+                    data: [1, 1, 2, 1, 1, 2, 1],
+                    itemStyle: { color: '#E07A5F' },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: function(params) {
+                            if (params.dataIndex === 0) return 'Titika Gap';
+                            return '';
+                        }
+                    }
+                }
+            ]
+        };
+        digitalStrategyChart.setOption(digitalStrategyOption);
+
+        // Technology Radar Chart
+        const techRadarChart = echarts.init(document.getElementById('techRadarChart'));
+        const techRadarOption = {
+            tooltip: {},
+            legend: {
+                data: ['Titika', 'Industry Average'],
+                bottom: 'bottom'
+            },
+            radar: {
+                indicator: [
+                    { name: 'Moisture Wicking', max: 100 },
+                    { name: 'Antimicrobial', max: 100 },
+                    { name: 'Four-way Stretch', max: 100 },
+                    { name: 'Temperature Control', max: 100 },
+                    { name: 'Durability', max: 100 },
+                    { name: 'Eco-Friendly', max: 100 }
+                ],
+                shape: 'polygon'
+            },
+            series: [{
+                name: 'Technology Comparison',
+                type: 'radar',
+                data: [
+                    {
+                        value: [95, 90, 95, 85, 88, 75],
+                        name: 'Titika',
+                        itemStyle: { color: '#6A4C93' },
+                        lineStyle: { width: 3 },
+                        areaStyle: { opacity: 0.3 }
+                    },
+                    {
+                        value: [80, 60, 85, 70, 80, 65],
+                        name: 'Industry Average',
+                        itemStyle: { color: '#A06CD5' },
+                        lineStyle: { width: 2, type: 'dashed' },
+                        areaStyle: { opacity: 0.2 }
+                    }
+                ]
+            }]
+        };
+        techRadarChart.setOption(techRadarOption);
+
+        // Performance Metrics Chart
+        const performanceChart = echarts.init(document.getElementById('performanceChart'));
+        const performanceOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                top: '3%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'value',
+                max: 100,
+                axisLabel: {
+                    formatter: '{value}%'
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: ['Brand Awareness', 'Digital Presence', 'Product Innovation', 'Market Share', 'Customer Loyalty']
+            },
+            series: [{
+                name: 'Current Performance',
+                type: 'bar',
+                data: [
+                    { value: 25, itemStyle: { color: '#E07A5F' } },
+                    { value: 15, itemStyle: { color: '#E07A5F' } },
+                    { value: 85, itemStyle: { color: '#81B29A' } },
+                    { value: 5, itemStyle: { color: '#E07A5F' } },
+                    { value: 60, itemStyle: { color: '#F2CC8F' } }
+                ],
+                label: {
+                    show: true,
+                    position: 'right',
+                    formatter: '{c}%'
+                }
+            }]
+        };
+        performanceChart.setOption(performanceOption);
+
+        // Strategic Roadmap Chart
+        const roadmapChart = echarts.init(document.getElementById('roadmapChart'));
+        const roadmapOption = {
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'shadow'
+                }
+            },
+            grid: {
+                left: '10%',
+                right: '10%',
+                top: '5%',
+                bottom: '5%',
+                containLabel: true
+            },
+            xAxis: {
+                type: 'category',
+                data: ['Month 1-3', 'Month 4-6', 'Month 7-9', 'Month 10-12'],
+                axisLabel: {
+                    interval: 0
+                }
+            },
+            yAxis: {
+                type: 'category',
+                data: ['Digital Presence', 'E-commerce', 'KOL Program', 'Product Dev', 'Brand Building'],
+                axisLabel: {
+                    interval: 0
+                }
+            },
+            visualMap: {
+                min: 0,
+                max: 100,
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: '-5%',
+                show: false
+            },
+            series: [{
+                name: 'Implementation',
+                type: 'heatmap',
+                data: [
+                    [0, 0, 100], [1, 0, 80], [2, 0, 60], [3, 0, 40],
+                    [0, 1, 20], [1, 1, 100], [2, 1, 80], [3, 1, 60],
+                    [0, 2, 40], [1, 2, 100], [2, 2, 100], [3, 2, 80],
+                    [0, 3, 0], [1, 3, 20], [2, 3, 60], [3, 3, 100],
+                    [0, 4, 60], [1, 4, 80], [2, 4, 100], [3, 4, 100]
+                ],
+                label: {
+                    show: true,
+                    formatter: function(params) {
+                        const activities = [
+                            ['Setup accounts', 'Content creation', 'Community', 'Optimization'],
+                            ['Platform entry', 'Flagship stores', 'Integration', 'Analytics'],
+                            ['Recruit KOLs', 'Launch campaigns', 'Scale program', 'Measure ROI'],
+                            ['Research', 'Design', 'Testing', 'Launch'],
+                            ['Awareness', 'Positioning', 'Authority', 'Leadership']
+                        ];
+                        return activities[params.value[1]][params.value[0]];
+                    }
+                },
+                itemStyle: {
+                    borderRadius: 4
+                },
+                emphasis: {
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                }
+            }],
+            color: ['#E07A5F', '#F2CC8F', '#81B29A', '#6A4C93']
+        };
+        roadmapChart.setOption(roadmapOption);
+
+        // Responsive handling
+        window.addEventListener('resize', function() {
+            portfolioChart.resize();
+            marketShareChart.resize();
+            positioningChart.resize();
+            digitalStrategyChart.resize();
+            techRadarChart.resize();
+            performanceChart.resize();
+            roadmapChart.resize();
+        });
+    </script>
+</body>
+</html>
